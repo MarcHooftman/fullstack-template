@@ -1,0 +1,14 @@
+name: Frontend Workflow
+
+on:
+  push:
+    paths:
+      - 'frontend/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run a script
+        run: echo "Changes detected in frontend/"
