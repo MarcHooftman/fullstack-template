@@ -1,3 +1,5 @@
+"use client";
+
 import { AuthContextValue } from "@/types/auth";
 import { createContext } from "react";
 

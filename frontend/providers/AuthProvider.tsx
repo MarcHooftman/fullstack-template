@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useMemo, useState, useCallback } from "react";
 import type { ReactNode } from "react";
 import { decodeToken, isTokenExpired, getToken, removeToken, setToken } from "@/lib/jwt";
@@ -24,8 +26,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setTokenState(t);
             const payload = decodeToken(t);
             setUser({ ...payload } as User);
+            return true;
         } catch (err) {
             console.error("Invalid token provided to login", err);
+            return false;
         }
     }, []);
 

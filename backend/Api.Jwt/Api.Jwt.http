@@ -1,0 +1,6 @@
+@Api.Jwt_HostAddress = http://localhost:5150
+
+GET {{Api.Jwt_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

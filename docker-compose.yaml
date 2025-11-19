@@ -1,0 +1,91 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    environment:
+      - ASPNETCORE_URLS=${ASPNETCORE_URLS:-http://0.0.0.0:80}
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
+      - ISSUER_URL=${ISSUER_URL:-http://issuer:80}
+      - ConnectionStrings__DefaultConnection="${ConnectionStrings__DefaultConnection:-Host=db;Port=5432;Database=db;Username=user;Password=pass}"
+      # JWT settings used by the API to validate tokens and to reach the issuer
+      - Jwt__Key=${Jwt__Key:-supersecret_dev_key}
+      - Jwt__Issuer=${Jwt__Issuer:-Issuer}
+      - Jwt__Audience=${Jwt__Audience:-Audience}
+      - JwtIssuerBaseUrl=${ISSUER_URL:-http://issuer:80}
+    networks:
+      - mybridge
+    depends_on:
+      - db
+  issuer:
+    build:
+      context: ./backend/Api.JWT
+      dockerfile: Dockerfile
+    ports:
+      - "5001:80"
+    environment:
+      - ASPNETCORE_URLS=${ISSUER_ASPNETCORE_URLS:-http://0.0.0.0:80}
+      - ASPNETCORE_ENVIRONMENT=${ISSUER_ASPNETCORE_ENVIRONMENT:-Development}
+      # Connection string for the issuer's own DB (falls back to shared DB)
+      - ConnectionStrings__JwtConnection=${ConnectionStrings__JwtConnection:-"Host=db;Port=5432;Database=db;Username=user;Password=pass"}
+      - JWT_CONNECTION=${JWT_CONNECTION:-"Host=db;Port=5432;Database=db;Username=user;Password=pass"}
+      # JWT signing key and token settings (override in .env for production)
+      - Jwt__Key=${Jwt__Key:-supersecret_dev_key}
+      - Jwt__Issuer=${Jwt__Issuer:-Issuer}
+      - Jwt__Audience=${Jwt__Audience:-Audience}
+    networks:
+      - mybridge
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://backend:80}
+        API_PROXY_TARGET: ${API_PROXY_TARGET:-http://backend:80}
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-http://backend:80}  # runtime if needed
+      - API_PROXY_TARGET=${API_PROXY_TARGET:-http://backend:80}
+    depends_on:
+      - backend
+    networks:
+      - mybridge
+
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-pass}
+      - POSTGRES_DB=${POSTGRES_DB:-db}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5444:5432"
+    networks:
+      - mybridge
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    restart: always
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL:-admin@localhost.com}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD:-admin}
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+    networks:
+      - mybridge
+
+networks:
+  mybridge:
+    driver: bridge
+
+volumes:
+  db-data:
+    driver: local

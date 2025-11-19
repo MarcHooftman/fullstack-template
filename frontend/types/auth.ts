@@ -28,6 +28,6 @@ export type AuthContextValue = {
     user: User | null;
     token: Token;
     loading: boolean;
-    login: (token: NonNullable<Token>, profile?: Profile) => void;
+    login: (token: NonNullable<Token>, profile?: Profile) => boolean;
     logout: () => void;
 };

@@ -13,3 +13,17 @@ export type ApiError = {
     details?: string;
     errors?: Record<string, string[]>;
 };
+
+export class ApiErrorObject extends Error {
+    message: string;
+    statusCode: number;
+    details?: string;
+    errors?: Record<string, string[]>;
+    constructor(message: string, statusCode: number, details?: string, errors?: Record<string, string[]>) {
+        super(message);
+        this.message = message;
+        this.statusCode = statusCode;
+        this.details = details;
+        this.errors = errors;
+    }
+}
